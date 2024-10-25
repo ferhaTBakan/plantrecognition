@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Recognition AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: rgb(249, 250, 251);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 768px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            color: rgb(17, 24, 39);
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: rgb(75, 85, 99);
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: rgb(17, 24, 39);
+        }
+
+        .card-description {
+            color: rgb(75, 85, 99);
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            background-color: rgb(79, 70, 229);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: rgb(67, 56, 202);
+        }
+
+        .button:disabled {
+            background-color: rgb(156, 163, 175);
+            cursor: not-allowed;
+        }
+
+        .button svg {
+            margin-right: 0.5rem;
+        }
+
+        .camera-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            background-color: rgb(243, 244, 246);
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .plant-info {
+            margin-bottom: 1.5rem;
+        }
+
+        .plant-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .plant-origin {
+            color: rgb(75, 85, 99);
+            margin-bottom: 1rem;
+        }
+
+        .care-instructions {
+            margin-bottom: 1.5rem;
+        }
+
+        .care-instructions h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .care-instructions ul {
+            padding-left: 1.5rem;
+            color: rgb(75, 85, 99);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .image-grid img {
+            width: 100%;
+            border-radius: 0.375rem;
+        }
+
+        .pdf-button {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>Plant Recognition AI</h1>
+            <p>Identify plants instantly from a photo of their leaves</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Plant Identifier</h2>
+                <p class="card-description">Take a photo or upload an image of a plant's leaves to get started</p>
+            </div>
+
+            <!-- Camera Button -->
+            <div class="camera-container">
+                <button id="captureButton" class="button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <span>Take Photo</span>
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="results">
+                <div class="alert">
+                    <span id="accuracy"></span>
+                </div>
+
+                <div class="plant-info">
+                    <h3 id="plantName" class="plant-name"></h3>
+                    <p id="plantOrigin" class="plant-origin"></p>
+                </div>
+
+                <div class="care-instructions">
+                    <h4>Care Instructions:</h4>
+                    <ul id="careInstructions"></ul>
+                </div>
+
+                <div class="image-grid">
+                    <img src="/api/placeholder/300/200" alt="Sample plant view 1">
+                    <img src="/api/placeholder/300/200" alt="Sample plant view 2">
+                </div>
+
+                <button id="generatePDF" class="button pdf-button">
+                    Generate PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for plant recognition
+        const mockResult = {
+            name: "Japanese Maple",
+            accuracy: 95.8,
+            origin: "East Asia",
+            careInstructions: [
+                "Partial to full sun",
+                "Well-draining soil",
+                "Regular watering",
+                "Protection from strong winds"
+            ]
+        };
+
+        // DOM elements
+        const captureButton = document.getElementById('captureButton');
+        const resultsSection = document.getElementById('results');
+        const accuracyElement = document.getElementById('accuracy');
+        const plantNameElement = document.getElementById('plantName');
+        const plantOriginElement = document.getElementById('plantOrigin');
+        const careInstructionsElement = document.getElementById('careInstructions');
+        const generatePDFButton = document.getElementById('generatePDF');
+
+        // Handle photo capture
+        captureButton.addEventListener('click', () => {
+            // Disable button and show loading state
+            captureButton.disabled = true;
+            captureButton.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Analyzing...</span>
+            `;
+
+            // Simulate API call delay
+            setTimeout(() => {
+                displayResults(mockResult);
+                
+                // Reset button state
+                captureButton.disabled = false;
+                captureButton.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <span>Take Photo</span>
+                `;
+            }, 1500);
+        });
+
+        // Display results
+        function displayResults(result) {
+            accuracyElement.textContent = `Match found with ${result.accuracy}% confidence`;
+            plantNameElement.textContent = result.name;
+            plantOriginElement.textContent = `Origin: ${result.origin}`;
+            
+            // Clear and populate care instructions
+            careInstructionsElement.innerHTML = '';
+            result.careInstructions.forEach(instruction => {
+                const li = document.createElement('li');
+                li.textContent = instruction;
+                careInstructionsElement.appendChild(li);
+            });
+
+            // Show results section
+            resultsSection.classList.add('active');
+        }
+
+        // Handle PDF generation
+        generatePDFButton.addEventListener('click', () => {
+            alert('Generating PDF with plant information...');
+            // In a real implementation, this would generate a PDF with plant details
+        });
+    </script>
+</body>
+</html>
